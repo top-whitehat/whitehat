@@ -5,7 +5,9 @@ target/
 *.jar
 
 
+
 *.log
 .idea/
+.settings/
 .DS_Store
 
