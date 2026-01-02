@@ -1,0 +1,171 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>top.whitehat</groupId>
+	<artifactId>whitehat</artifactId>
+	<version>0.2.4</version>
+	
+	<packaging>jar</packaging>
+	<name>whitehat</name> 
+	<description>Packet capture, analysis for network security</description>
+	<url>https://github.com/top-whitehat/whitehat</url>
+	
+	<scm>
+	  <connection>scm:git:https://github.com/top-whitehat/whitehat.git</connection>
+	  <developerConnection>scm:git:https://github.com/top-whitehat/whitehat.git</developerConnection>
+	  <url>https://github.com/top-whitehat/whitehat</url>
+	</scm>
+	
+	<licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+ 
+    <developers>
+        <developer>
+            <id>whitehat</id>
+            <name>whitehat</name>
+            <email>whitehat8888@outlook.com</email>
+            <roles>
+                <role>Project Manager</role>
+                <role>Architect</role>
+            </roles>
+        </developer>
+    </developers>
+    
+    <distributionManagement>
+        <snapshotRepository>
+            <id>whitehat</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
+        </snapshotRepository>
+        <repository>
+            <id>whitehat</id>
+            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+    
+    
+
+    <properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<build>
+		<plugins> 
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.11.0</version>
+			</plugin>
+			
+		    <!-- skip tests -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.1.2</version>
+				<configuration>
+					<skipTests>true</skipTests> <!--skip tests -->
+				</configuration>
+			</plugin>
+
+			<!-- set  jar file name that will be created-->
+		    <plugin>
+		      <groupId>org.apache.maven.plugins</groupId>
+		      <artifactId>maven-jar-plugin</artifactId>
+		      <version>3.3.0</version>
+		      <configuration>
+		        <finalName>whitehat</finalName> <!--final JAR filename is whitehat.jar -->
+		      </configuration>
+		    </plugin>
+		    
+		     <!--   javadoc plugin    -->
+		    <plugin>
+			  <groupId>org.apache.maven.plugins</groupId>
+			  <artifactId>maven-javadoc-plugin</artifactId>
+			  <version>3.6.3</version>  
+			  <executions>
+			    <execution>
+			      <id>attach-javadocs</id>
+			      <goals>
+			        <goal>jar</goal>  <!-- create javadoc jar -->
+			      </goals>
+			    </execution>
+			  </executions>
+			  <configuration>
+			    <doclint>none</doclint>
+			    <failOnError>false</failOnError>
+			  </configuration>
+			</plugin>
+		    
+		    <!--   central publishing plugin    -->
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>0.4.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>whitehat</publishingServerId>
+                    <tokenAuth>true</tokenAuth>
+                </configuration>
+            </plugin>
+            
+            <!--   attach source code -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.2.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--   gpg signature -->
+			<plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.5</version>
+                <configuration>
+                    <executable>D:\GnuPG\bin\gpg.exe</executable>
+                    <keyname>WhiteHat</keyname>  <!-- uid in gpg gen-key -->
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+     
+		</plugins>
+	</build>
+	
+	<dependencies>
+		<dependency>
+			<groupId>net.java.dev.jna</groupId>
+			<artifactId>jna</artifactId>
+			<version>5.18.1</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.13.2</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+	
+
+</project>
