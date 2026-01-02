@@ -23,6 +23,8 @@ import top.whitehat.NetCard;
 import top.whitehat.tools.ScanIp;
 import top.whitehat.tools.ScanProgress;
 
+
+/** Example of scan an IP address range for exists IPs */
 public class Example11_ScanIp {
 
 	public static void main(String[] args) throws UnknownHostException {

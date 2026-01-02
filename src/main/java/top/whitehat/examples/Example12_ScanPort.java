@@ -23,6 +23,8 @@ import top.whitehat.NetCard;
 import top.whitehat.tools.ScanPort;
 import top.whitehat.tools.ScanProgress;
 
+
+/** Example of scan specified ports on specified IP range for exists ports */
 public class Example12_ScanPort {
 
 	public static void main(String[] args) throws UnknownHostException {
