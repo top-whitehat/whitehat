@@ -15,24 +15,65 @@
  */
 package top.whitehat.util;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-
 /**
  * A text processor: convert string to table, and extract information in it.
  */
 public class Text {
+	
+	
+	public static String CSV = "@CSV@";
+
+	@FunctionalInterface
+	public static interface RowHandler {
+		public void onRow(TextRow row);
+	}
+
+	
+	/**
+	 * create Text object from file
+	 * 
+	 * @throws IOException
+	 */
+	public static Text readFile(String filename, String splitChars, RowHandler handler) throws IOException {
+		if (handler == null) {
+			return new Text(FileUtil.loadFromFile(filename));
+			
+		} else {
+			try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
+	            String line;
+	            while ((line = br.readLine()) != null) {
+	            	try {
+	            		TextRow row = new TextRow(line);
+	            		if (splitChars != null) { 
+	            			TextTable table = row.split(splitChars);
+	            			row = table.get(0);
+	            		}
+	            		handler.onRow(row);
+	            	} catch (Exception e) {
+						break;
+					}
+	            }
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	        }
+			return null;
+		}
+	}
 
 	/**
 	 * create Text object from file
 	 * 
 	 * @throws IOException
 	 */
-	public static Text fromFile(String filename) throws IOException {
-		return new Text(FileUtil.loadFromFile(filename));
+	public static Text readFile(String filename) throws IOException {
+		return readFile(filename, null, null);
 	}
 
 	/** create Text object from lines */
@@ -70,6 +111,11 @@ public class Text {
 
 	public TextTable table;
 
+	public Text() {
+		this("");
+		this.split("");
+		this.table.remove(0);
+	}
 	/** Constructor : create from specified string */
 	public Text(String str) {
 		rows = new TextRow(str);
@@ -117,7 +163,7 @@ public class Text {
 		rows = rows.filter(expr, false);
 		return this;
 	}
-	
+
 	/** Delete empty rows */
 	public Text deleteEmpty() {
 		rows = rows.deleteEmpty();
@@ -206,7 +252,7 @@ public class Text {
 		table = rows.match(regexExpr);
 		return this;
 	}
-	
+
 	/** Create a TextTable by extract words by regex in rows */
 	public Text match(Pattern firstPattern, Pattern nextPattern, int fixedColumns) {
 		table = rows.match(firstPattern, nextPattern, fixedColumns);
@@ -327,7 +373,7 @@ public class Text {
 	public String cell(int row, int col) {
 		return table.cell(row, col);
 	}
-	
+
 	/**
 	 * Gets the value of a cell specified by field name and row index, using the
 	 * field name to determine the column index. This method provides convenient
@@ -379,14 +425,19 @@ public class Text {
 	public String value() {
 		return cell(0, 0);
 	}
-	
+
 	public Text setFieldNames(int index) {
 		table.setFieldNames(index);
 		return this;
 	}
-	
+
 	public Text setFieldNames(String... names) {
 		table.setFieldNames(names);
 		return this;
 	}
+
+	public void toCSV(String filename) throws IOException {
+		table.toCSV(filename);
+	}
+
 }

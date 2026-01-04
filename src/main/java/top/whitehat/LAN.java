@@ -105,7 +105,7 @@ public class LAN {
 			String filePath = "/proc/net/arp";
 			Text t;
 			try {
-				t = Text.fromFile(filePath).deleteEmpty().split(" \t").setFieldNames(0);
+				t = Text.readFile(filePath).deleteEmpty().split(" \t").setFieldNames(0);
 				for(int row=0; row < t.rows(); row++) {
 					try {
 						String sIp = t.cell(row, 0); // row.get(0); // ip address

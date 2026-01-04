@@ -1,14 +1,17 @@
 
 
 # WhiteHat
-Network security tools: packet capture, analysis, intelligence
+WhiteHat， 中文名白帽， 是一个网卡抓包、包分析处理的 java 库。
+抓包(Packet Capture,  简称 pcap )，就是通过网卡接收网络上的各种数据包(Packet)，包括：自己的数据包，也包括别人的数据包。包括TCP、UDP等各种协议的数据包
+收取数据包后，可以深入分析数据包，分析或获取情报。当然，也可以通过网卡发送任意数据包。
+数据包处理是维护网络安全的重要手段。白帽黑客通过各种技术手段排查漏洞、维护网络安全。
 
 
-# Install dependencis
-Before using WhiteHat, you must first install the dependency library WinPcap or libpcap. Please choose based on your OS environment:
+# 安装依赖库
+使用 WhiteHat前,  必须要先安装依赖库 WinPcap 或者 libpcap。请根据你的OS环境选择:
 
 ### Windows
-Install WinPcap, Download url: https://www.winpcap.org/install/bin/WinPcap_4_1_3.exe
+安装 WinPcap, 下载地址： https://www.winpcap.org/install/bin/WinPcap_4_1_3.exe
 
 ### Ubuntu
 ```bash
@@ -26,10 +29,10 @@ brew install libpcap
 ```
 
 
-# The first packet capture program 
+# 第一个抓包程序
 
-## Create Java Maven project
-Create a new Java Maven project, modify the pom.xml file, and introduce the whitehat dependency into the project. 
+## 新建一个java maven 项目
+新建一个java maven 项目，修改 pom.xml, 将 whitehat 引入项目中 
 ```
     <dependency>
     	<groupId>top.whitehat</groupId>
@@ -37,30 +40,31 @@ Create a new Java Maven project, modify the pom.xml file, and introduce the whit
     	<version>0.2.4</version>
     </dependency>
 ```
-As you can see, the jar package downloaded by Maven is whitehat-0.2.4.jar. It can be opened, and the source code is included.
+可以看到，Maven下载下来的 jar包是 whitehat-0.2.4.jar,  可以打开它，有源码的。
+其中： top.whitehat.examples 中有本文所有的示例源码程序。
 
 
-## Three Steps to Write a Packet Capture Program
+## 三个步骤写一个抓包程序
 ```java
 import top.whitehat.NetCard;  //network interface card class
  
 public class App1 {
  
 	public static void main(String[] args) {
-		// Step 1:  open the network interface card(The default is the one connected to the internet. )
+		// 第一步：打开网卡 （如果本机有多个网卡，自动首选连接互联网的网卡 )
 		NetCard card = NetCard.inet();
 		
-		// Step 2: Define a handler program to receive packets.
+		// 第二步：定义一个接收数据包的 handler 处理程序
 		card.onPacket(packet -> {
 			System.out.println(packet);
 		});
 		
-		// Step 3: start packet capture
+		// 第三步：开始抓包
 		card.start(); 
 	}
 }
 ```
-Running result: (Note: It must be run with root privileges​ on Linux and Mac, but not required on Windows.)
+运行结果：(注意：在Linux， Mac上运行必须具有 root权限, Windows上不用)
 ```
 Tcp, Src: 192.168.100.212:59838, Dst: 121.36.47.3:443, [ACK], Seq=2424216054, Ack=2578474027, Win=509
 Tcp, Src: 192.168.100.212:59838, Dst: 121.36.47.3:443, [ACK], Seq=2424217454, Ack=2578474027, Win=509
@@ -70,11 +74,11 @@ Tcp, Src: 121.36.47.3:443, Dst: 192.168.100.212:59838, [ACK], Seq=2578474422, Ac
 Tcp, Src: 192.168.100.212:59838, Dst: 121.36.47.3:443, [ACK], Seq=2424218601, Ack=2578474456, Win=514
 Udp, Src: 192.168.100.111:2103, Dst: 192.168.100.255:2103
 ```
-The sole function of this program is to print various data packets captured by the network card, 
-which may include: packets of various protocols, your own, and those of others...
+这个程序的唯一作用是打印网卡抓到的各种数据包，可以看到：有各种协议的，有自己的，别人的... 
 
+这个程序是个死循环，请在IDE中强行中断运行。
 
-# Examples
+# 示例程序源码在whitehat.jar中
 
 The source code for the example programs is inside whitehat-0.2.4.jar.
 

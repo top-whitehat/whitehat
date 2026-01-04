@@ -34,7 +34,7 @@ public class ByteArrayOutputStream extends OutputStream {
 
 	@Override
 	public void write(int b) throws IOException {
-		array.putByte((byte)(b & 0xFF));
+		array.put((byte)(b & 0xFF));
 	}
 	
 	public int size() {
@@ -47,5 +47,9 @@ public class ByteArrayOutputStream extends OutputStream {
 		} catch (UnsupportedEncodingException e) {
 			return null;
 		}
+	}
+	
+	public byte[] toByteArray() {
+		return array.getBytes();
 	}
 }

@@ -18,11 +18,39 @@ package top.whitehat.util;
 import java.io.IOException;
 import java.util.List;
 
-
-
+import org.junit.Test;
+import static org.junit.Assert.*;
 
 public class FileUtilTest {
+	
+	void assertWord(String s) {
+		assertTrue(s.contains("world"));
+	}
+	
+	void assertByte(byte[] bytes) {
+		assertWord(new String(bytes));
+	}
+	
+	@Test
+	public void testLoadFromFile() throws IOException {
+		assertWord(FileUtil.loadFromFile("src/test/resources/sample.txt"));
+		assertWord(FileUtil.loadFromFile("res://sample.txt"));
+		assertWord(FileUtil.loadFromFile("https://www.jostudio.com.cn/myfile/sample.txt"));
+	}
+	
+	@Test
+	public void testLoadBinaryFile() throws IOException {
+		assertByte(FileUtil.loadBinaryFile("src/test/resources/sample.txt"));
+		assertByte(FileUtil.loadBinaryFile("res://sample.txt"));
+		assertByte(FileUtil.loadBinaryFile("https://www.jostudio.com.cn/myfile/sample.txt"));
+	}
 
+	@Test
+	public void testSaveBinaryFile() throws IOException {
+		byte[] bs = "tt".getBytes();
+		FileUtil.saveBinaryFile("src/test/resources/sample.txt", 2, bs, 0, 2);
+		assertWord(FileUtil.loadFromFile("src/test/resources/sample.txt"));
+	}
 	
 	static void findNmapScripts() throws IOException {
 		String nmap = FileUtil.findFileInPath("nmap", true);

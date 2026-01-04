@@ -15,6 +15,9 @@
  */
 package top.whitehat.util;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -1074,6 +1077,15 @@ public class TextTable extends ArrayList<TextRow> {
 		return get(row).get(fields.indexOf(fieldName));
 	}
 
+	public void toCSV(String filename) throws IOException {
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
+			for(TextRow row : this) {
+				writer.write(row.csv());
+				writer.newLine();
+			}
+		}
+	}
+	
 	/** Fields of the table */
 	public static class Fields extends TextRow {
 		private static final long serialVersionUID = -661029933615125616L;

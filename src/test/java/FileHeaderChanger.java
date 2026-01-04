@@ -50,7 +50,7 @@ public class FileHeaderChanger {
 				// change header before "package " declaration
 				if (offset >= 0) {
 					content = header + content.substring(offset);
-					FileUtil.saveToFile(file, content);
+					FileUtil.saveToFile(file.getAbsolutePath(), content);
 					processedFileCount++;
 				}
 				

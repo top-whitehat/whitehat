@@ -131,6 +131,10 @@ public class JSON extends LinkedHashMap<String, Object> {
 		return (Boolean)get(key);
 	}
 	
+	public boolean has(String key) {
+		return containsKey(key);
+	}
+	
 	/**
 	 * Adds a key-value pair to the JSON object.
 	 *
@@ -389,7 +393,9 @@ public class JSON extends LinkedHashMap<String, Object> {
 	
 	/** Convert an object to JSON string */
 	public static String stringify(Object obj) {
-		if (obj instanceof JSON) {
+		if (obj instanceof Map) {
+			return toJson(obj, 2);
+		} else if (obj instanceof JSON) {
 			return toJson(obj, 2);
 		} else if (obj instanceof List) {
 			return toJson(obj, 2);
@@ -424,6 +430,7 @@ public class JSON extends LinkedHashMap<String, Object> {
 	public static JSON parse(Map<String, Object> map) {
 		return parseMap(map);
 	}
+	
 	
 	/**
 	 * Parses a YAML string into a JSON object.

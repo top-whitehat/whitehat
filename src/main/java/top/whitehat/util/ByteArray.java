@@ -1522,7 +1522,7 @@ public class ByteArray {
 	public ByteArray put(int index, byte value) {
 		ensureCapacity(index + 1);
 		putByte(index, value);
-		writerIndexMinimum(index + 1);
+		writerIndexMinimum(index);
 		return this;
 	}
 	

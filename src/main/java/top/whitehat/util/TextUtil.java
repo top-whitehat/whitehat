@@ -13,23 +13,30 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package top.whitehat.util;import java.util.ArrayList;import java.util.List;import java.util.regex.Matcher;import java.util.regex.Pattern;
+package top.whitehat.util;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /** Provides static methods of text processing */
 public class TextUtil {
 
 	/** remove space char in the string */
 	public static String removeSpace(String s) {
 		StringBuilder sb = new StringBuilder();
-		for(int i=0; i<s.length(); i++) {
+		for (int i = 0; i < s.length(); i++) {
 			char c = s.charAt(i);
-			if (c == ' ' || c =='\t' || c =='\r' || c =='\n') {
-				
+			if (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
+
 			} else {
 				sb.append(c);
 			}
 		}
 		return sb.toString();
 	}
+
 	/**
 	 * Attempts to parse a string into a numeric value, trying Long first, then
 	 * Double. If both attempts fail, returns the original string.
@@ -281,7 +288,7 @@ public class TextUtil {
 				}
 			}
 		}
-		
+
 		return sb.toString();
 
 	}
@@ -516,4 +523,7 @@ public class TextUtil {
 
 		return text;
 	}
+
+
+	
 }

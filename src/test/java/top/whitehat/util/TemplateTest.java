@@ -76,7 +76,7 @@ public class TemplateTest {
         data.put("users", users);
         
         String result = Template.render(template, data);
-        System.out.println(result);
+//        System.out.println(result);
         assertEquals("Alice is 25 years old. Bob is 30 years old. ", result);
     }
     

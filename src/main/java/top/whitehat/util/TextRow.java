@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
 /**
  * TextRow is a specialized ArrayList<String> implementation designed for
  * handling multi-line text data efficiently. It provides convenient methods for
@@ -77,8 +76,15 @@ public class TextRow extends ArrayList<String> {
 		return new TextRow(text);
 	}
 
+	/** load from specified words */
+	public static TextRow fromWords(String ... words) {
+		TextRow ret = new TextRow();
+		for(String word: words) ret.add(word);
+		return ret;
+	}
+	
 	/** Default constructor for TextRow */
-	public TextRow() {
+ 	public TextRow() {
 	}
 
 	/**
@@ -98,6 +104,7 @@ public class TextRow extends ArrayList<String> {
 		}
 	}
 
+	
 	/**
 	 * Constructs a TextRow from a multiple line string Each line in the string
 	 * becomes a separate row in the TextRow
@@ -191,8 +198,9 @@ public class TextRow extends ArrayList<String> {
 	public TextRow filter(String expr) {
 		return filter(expr, false);
 	}
-	
-	/** Alias of filter()
+
+	/**
+	 * Alias of filter()
 	 * 
 	 * @param expr
 	 * @return
@@ -348,7 +356,11 @@ public class TextRow extends ArrayList<String> {
 	public TextTable split(String separatorChars, int limit) {
 		TextTable t = new TextTable();
 		for (String row : this) {
-			List<String> r = TextUtil.split(row, separatorChars, limit);
+			List<String> r;
+			if (Text.CSV.equalsIgnoreCase(separatorChars))
+				r = CsvFile.splitLine(row, limit);
+			else
+				r = TextUtil.split(row, separatorChars, limit);
 			t.add(new TextRow(r));
 		}
 		return t;
@@ -373,31 +385,32 @@ public class TextRow extends ArrayList<String> {
 	/** Create a TextTable by extract words by regex in rows */
 	public TextTable match(Pattern firstPattern, Pattern nextPattern, int fixedColumns) {
 		TextTable table = new TextTable();
-		
+
 		for (String line : this) {
 			Matcher m = firstPattern.matcher(line);
 			if (m.find()) {
-				// create a new row, add each match words 
+				// create a new row, add each match words
 				TextRow row = new TextRow();
 				for (int n = 1; n <= m.groupCount(); n++) {
 					String word = m.group(n);
 					row.add(word);
 				}
 				table.add(row);
-										
-				// find next pattern if needed		
+
+				// find next pattern if needed
 				boolean hasNext = true;
-				while (nextPattern != null && hasNext ) {
-					line = line.substring(m.end());  // get remain string after end of matcher
+				while (nextPattern != null && hasNext) {
+					line = line.substring(m.end()); // get remain string after end of matcher
 					// find next pattern
 					m = nextPattern.matcher(line);
 					if (m.find()) {
-						hasNext = true;						
+						hasNext = true;
 						// create a new row
 						TextRow nextRow = new TextRow();
 						// add fixed columns from the previous row
 						if (fixedColumns > 0) {
-							for(int k=0; k<fixedColumns; k++) nextRow.add(row.get(k));
+							for (int k = 0; k < fixedColumns; k++)
+								nextRow.add(row.get(k));
 						}
 						// add each match words
 						for (int n = 1; n <= m.groupCount(); n++) {
@@ -409,21 +422,20 @@ public class TextRow extends ArrayList<String> {
 						hasNext = false;
 					}
 				}
-				
+
 			}
 		}
-		
+
 		return table;
 	}
 
-	
 	/** find words after afterWord and before beforeWord */
 	public TextRow between(String afterWord, String beforeWord) {
 		List<String> words = new ArrayList<String>();
 		boolean findAfter = false;
 		boolean findBefore = false;
-		int i =0;
-		while(i < this.size()) {
+		int i = 0;
+		while (i < this.size()) {
 			String word = this.get(i++);
 			if (!findAfter) {
 				findAfter = TextUtil.match(word, afterWord);
@@ -436,12 +448,36 @@ public class TextRow extends ArrayList<String> {
 				}
 			}
 		}
-		if (!findBefore) words.clear();
+		if (!findBefore)
+			words.clear();
 		return new TextRow(words);
 	}
-	
+
 	public String value(int index) {
 		String ret = index >= 0 && index < size() ? get(index) : null;
 		return ret == null ? ret : ret.trim();
+	}
+
+	public String join(String seperator) {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < size(); i++) {
+			if (seperator != null && sb.length() > 0)
+				sb.append(seperator);
+			sb.append(get(i));
+		}
+		return sb.toString();
+	}
+	
+	public String csv() {
+		return CsvFile.joinLine(this);
+	}
+	
+	public TextRow columns(int... columns) {
+		TextRow ret = new TextRow();
+		for(int col : columns) {
+			String w = this.get(col);
+			ret.add(w);
+		}
+		return ret;
 	}
 }

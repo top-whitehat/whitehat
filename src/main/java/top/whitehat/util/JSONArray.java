@@ -35,6 +35,10 @@ public class JSONArray extends JSON   {
 	public int size() {
 		return list.size();
 	}
+	
+	public int length() {
+		return list.size();
+	}
 
 	@Override
 	public boolean isEmpty() {
@@ -101,6 +105,17 @@ public class JSONArray extends JSON   {
 	public Object get(int index) {
 		return list.get(index);
 	}
+	
+	
+	public JSON getJSON(int index) {
+		Object obj = list.get(index);
+		if (obj instanceof JSON) {
+			return (JSON)obj;
+		} else {
+			throw new RuntimeException("item " + index + " is not a JSON object");
+		}
+	}
+	
 	
 	private boolean isInteger(String key) {
 		try {

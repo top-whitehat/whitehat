@@ -21,14 +21,16 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -40,6 +42,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
+import java.nio.charset.StandardCharsets;
 
 /**
  * FileUtil provides utility methods for working with files
@@ -149,7 +152,7 @@ public class FileUtil {
 	private static String[] executableFileExts = null;
 
 	/** Check whether current OS is Windows */
-	private static boolean isWindows() {
+	protected static boolean isWindows() {
 		return System.getProperty("os.name").toLowerCase().contains("windows");
 	}
 
@@ -505,12 +508,28 @@ public class FileUtil {
 
 	}
 
-	private static boolean isUrl(String s) {
-		if (s != null) {
-			if (s.startsWith("http://") || s.startsWith("https://"))
+	/** Check whether the filename is from http */
+	private static boolean isHttp(String filename) {
+		if (filename != null) {
+			if (filename.startsWith("http://") || filename.startsWith("https://"))
 				return true;
 		}
 		return false;
+	}
+
+	/** Check whether the filename is from resource */
+	private static boolean isResource(String filename) {
+		if (filename != null) {
+			if (filename.startsWith("res://"))
+				return true;
+		}
+		return false;
+	}
+
+	/** get string after protocol */
+	private static String afterProtocol(String filename) {
+		int pos = filename.indexOf("://");
+		return pos >= 0 ? filename.substring(pos + 3) : filename;
 	}
 
 	/**
@@ -522,7 +541,7 @@ public class FileUtil {
 	public static String getFileName(String fileName) {
 		String separator = File.separator;
 
-		if (isUrl(fileName)) {
+		if (isHttp(fileName)) {
 			separator = "/";
 			fileName = fileName.substring(fileName.indexOf("//") + 2);
 			int pos = fileName.lastIndexOf("?");
@@ -570,7 +589,7 @@ public class FileUtil {
 	 * @param args
 	 * @return
 	 */
-	public static String connect(String... args) {
+	public static String join(String... args) {
 		StringBuilder builder = new StringBuilder();
 		for (int i = 0; i < args.length; i++) {
 			if (i > 0 && !args[i - 1].endsWith(File.separator))
@@ -583,29 +602,35 @@ public class FileUtil {
 	/**
 	 * Save string to the specified file
 	 * 
-	 * @param file      The file
-	 * @param str
-	 * @param isApppend
+	 * @param filename    The file name
+	 * @param content     The content to save
+
 	 * @throws IOException
 	 */
-	public static void saveToFile(File file, String str) throws IOException {
-		saveToFile(file, str, false);
+	public static void saveToFile(String filename, String content) throws IOException {
+		saveToFile(filename, content, false);
 	}
 
 	/**
 	 * Save string to the specified file
 	 * 
-	 * @param file      The file
-	 * @param str
-	 * @param isApppend
+	 * @param filename    The file name
+	 * @param content     The content to save
+	 * @param isApppend   Indicate whether append to existing file
+	 * 
 	 * @throws IOException
 	 */
-	public static void saveToFile(File file, String str, boolean isAppend) throws IOException {
-		if (str == null)
-			str = "";
+	public static void saveToFile(String filename, String content, boolean isAppend) throws IOException {
+		if (isResource(filename)) throw new IOException("cannot save file to resource");
+		if (isHttp(filename)) throw new IOException("cannot save file to http");
+		
+		if (content == null)
+			content = "";
 
+		File file = new File(filename);
 		if (!file.exists()) {
-			file.getParentFile().mkdirs();
+			if (file.getParentFile() != null)
+				file.getParentFile().mkdirs();
 			file.createNewFile();
 		}
 
@@ -614,7 +639,7 @@ public class FileUtil {
 		try {
 			writer = new FileWriter(file, isAppend);
 			bufferedWriter = new BufferedWriter(writer);
-			bufferedWriter.write(str);
+			bufferedWriter.write(content);
 			bufferedWriter.flush();
 			bufferedWriter.close();
 		} finally {
@@ -624,64 +649,52 @@ public class FileUtil {
 		}
 	}
 
-	/**
-	 * Save string to the specified file name
-	 * 
-	 * @param file      The file
-	 * @param str
-	 * @param isApppend
-	 * @throws IOException
-	 */
-	public static void saveToFile(String fileName, String str, boolean isAppend) throws IOException {
-		saveToFile(new File(fileName), str, isAppend);
-	}
 
-	/**
-	 * Save string to the specified file name
-	 * 
-	 * @param fileName
-	 * @param str
-	 * @throws IOException
-	 */
-	public static void saveToFile(String fileName, String str) throws IOException {
-		saveToFile(fileName, str, false);
+	/** open file as input stream */
+	public static InputStream openInputStream(String filename) throws IOException {
+		if (isResource(filename)) {
+			// open input stream reader from resource
+			ClassLoader loader = ClassLoader.getSystemClassLoader();
+			filename = afterProtocol(filename);
+			return loader.getResourceAsStream(filename);
+		} else if (isHttp(filename)) {
+			// open input stream reader from http
+			@SuppressWarnings("resource")
+			HttpUtil h = new HttpUtil();
+			return h.request("GET", filename, null).getBodyStream();
+		} else {
+			// open input stream reader from file
+			if (!new File(filename).exists())
+				throw new FileNotFoundException("file '" + filename + "' not exists");
+			return new FileInputStream(filename);
+		}
 	}
 
 	/**
 	 * Load string from the specified file name
 	 * 
-	 * @param file The file
+	 * @param fileName The file name
+	 * @param charset  The Charset
+	 * 
 	 * @return the file content string
 	 * @throws IOException
 	 */
-	public static String loadFromFile(File file) throws IOException {
-		if (!file.exists()) {
-			throw new FileNotFoundException("file not found : " + file);
-		}
+	public static String loadFromFile(String filename, String charset) throws IOException {
+		Charset cset = charset != null ? Charset.forName(charset) : StandardCharsets.UTF_8;
 
-		FileReader reader = null;
-		BufferedReader bufferedReader = null;
-		try {
-			reader = new FileReader(file);
-			bufferedReader = new BufferedReader(reader);
+		try (InputStream in = openInputStream(filename);
+				BufferedReader reader = new BufferedReader(new InputStreamReader(in, cset))) {
 			StringBuilder builder = new StringBuilder();
 			char[] buffer = new char[4096];
 			int bytes = 0;
 
 			do {
-				bytes = bufferedReader.read(buffer);
+				bytes = reader.read(buffer);
 				if (bytes > 0)
 					builder.append(buffer, 0, bytes);
 			} while (bytes != -1);
 
 			return builder.toString();
-
-		} finally {
-			if (bufferedReader != null)
-				bufferedReader.close();
-
-			if (reader != null)
-				reader.close();
 		}
 	}
 
@@ -692,44 +705,102 @@ public class FileUtil {
 	 * @return the file content string
 	 * @throws IOException
 	 */
-	public static String loadFromFile(String fileName) throws IOException {
-		return loadFromFile(new File(fileName));
+	public static String loadFromFile(String filename) throws IOException {
+		return loadFromFile(filename, null);
 	}
 
-	public static byte[] loadBinaryFile(File file) throws IOException {
-		InputStream inputStream = null;
-		try {
-			inputStream = new FileInputStream(file);
-			long fileSize = file.length();
-			if (fileSize > Integer.MAX_VALUE) {
-				throw new IOException("file size too large");
-			}
-			byte[] bytes = new byte[(int) fileSize];
-			inputStream.read(bytes);
-			return bytes;
+	/** Load specified bytes from file
+	 * 
+	 * @param filename  The filename
+	 * @param offset    Start offset
+	 * @param length    copy byte length. set value to -1 means copy to the end of the file.
+	 * 
+	 * @return  byte array
+	 * @throws IOException
+	 */
+	public static byte[] loadBinaryFile(String filename, int offset, int length) throws IOException {
+		if (offset < 0)
+			throw new IllegalArgumentException("offset is negative");
+		
+		if (length == 0)
+			return new byte[0];
 
-		} catch (IOException e) {
-			throw new IOException(e);
-		} finally {
-			if (inputStream != null)
-				inputStream.close();
+		try (InputStream inputStream = openInputStream(filename); //
+				ByteArrayOutputStream outStream = new ByteArrayOutputStream(0)) {
+			byte[] buffer = new byte[4096];
+			int index = 0;
+			int len = 0;
+			int bytes = 0;
+
+			do {
+				bytes = inputStream.read(buffer);
+				for (int i = 0; i < bytes; i++) {
+					if (index >= offset) {
+						if (length < 0 || len < length) {
+							outStream.write(buffer, i, 1);
+							len++;
+						} else {
+							bytes = -1;
+							break;
+						}
+					}
+					index++;
+				}
+			} while (bytes != -1);
+
+			return outStream.toByteArray();
 		}
 	}
 
-	public static void saveBinaryFile(File file, byte[] bytes, int offset, int length) throws IOException {
-		OutputStream outputStream = null;
-		try {
-			outputStream = new FileOutputStream(file);
-			outputStream.write(bytes, offset, length);
-		} catch (IOException e) {
-			throw new IOException(e);
-		} finally {
-			if (outputStream != null)
-				outputStream.close();
+	/** Load all bytes from the file */
+	public static byte[] loadBinaryFile(String filename) throws IOException {
+		try (InputStream inputStream = openInputStream(filename); //
+				ByteArrayOutputStream outStream = new ByteArrayOutputStream(0)) {
+			byte[] buffer = new byte[4096];
+			int bytes = 0;
+
+			do {
+				bytes = inputStream.read(buffer);
+				if (bytes > 0)
+					outStream.write(buffer, 0, bytes);
+			} while (bytes != -1);
+
+			return outStream.toByteArray();
 		}
 	}
 
-	public static void saveBinaryFile(File file, byte[] bytes) throws IOException {
-		saveBinaryFile(file, bytes, 0, bytes.length);
+	/** Save bytes to file
+	 * 
+	 * @param filename    The file name
+	 * @param startIndex  The start position of the file
+	 * @param bytes       The byte arrays
+	 * @param offset      Start offset in the byte array 
+	 * @param length      Length of data to write
+	 * 
+	 * @throws IOException
+	 */
+	public static void saveBinaryFile(String filename, int startIndex, byte[] bytes, int offset, int length) throws IOException {
+		if (isResource(filename)) throw new IOException("cannot save file to resource");
+		if (isHttp(filename)) throw new IOException("cannot save file to http");
+		if (offset < 0 || offset + length > bytes.length) {
+			throw new ArrayIndexOutOfBoundsException();
+		}
+		
+		try (RandomAccessFile raf = new RandomAccessFile(filename, "rw")) {
+            if (startIndex > 0) raf.seek(startIndex);
+            if (length < 0) length = bytes.length;
+            raf.write(bytes, offset, length);
+
+        }
+	}
+
+	/** Save bytes to file */
+	public static void saveBinaryFile(String filename, byte[] bytes) throws IOException {
+		if (isResource(filename)) throw new IOException("cannot save file to resource");
+		if (isHttp(filename)) throw new IOException("cannot save file to http");
+		
+		try (OutputStream outputStream = new FileOutputStream(filename)) {
+			outputStream.write(bytes);
+		};
 	}
 }

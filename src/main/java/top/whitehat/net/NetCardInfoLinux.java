@@ -56,7 +56,7 @@ public class NetCardInfoLinux {
 
 		try {
 			// read information from the file: /etc/resolv.conf
-			Text text = Text.fromFile("/etc/resolv.conf").grep("nameserver").split(" \t");
+			Text text = Text.readFile("/etc/resolv.conf").grep("nameserver").split(" \t");
 			for (int i = 0; i < text.rows(); i++) {
 				String ip = text.cell(i, 1);
 				if (NetUtil.isIpV4(ip) || NetUtil.isIpV6(ip))
@@ -135,7 +135,7 @@ public class NetCardInfoLinux {
 		
 		Text t;
 		try {
-			t = Text.fromFile("/proc/net/route");
+			t = Text.readFile("/proc/net/route");
 		} catch (IOException e) {
 			return null;
 		}
@@ -200,7 +200,7 @@ public class NetCardInfoLinux {
 
 		Text t;
 		try {
-			t = Text.fromFile("/proc/net/arp");
+			t = Text.readFile("/proc/net/arp");
 		} catch (IOException e) {
 			return null;
 		}
