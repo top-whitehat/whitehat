@@ -78,7 +78,7 @@ which may include: packets of various protocols, your own, and those of others..
 
 The source code for the example programs is inside whitehat-0.2.4.jar.
 
-top.whitehat.examples.Example03_Filter.java     Introduces BPF packet filter
+[Example03_Filter.java Introduces BPF packet filter](src/main/java/top/whitehat/examples/Example03_Filter.java)
 
 top.whitehat.examples.Example04_Dump.java       Save the packets into .pcap file
 
